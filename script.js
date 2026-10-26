@@ -1,203 +1,129 @@
 
-const canvas = document.getElementById("game");
+const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const scoreDisplay = document.getElementById("score");
-const gameOverScreen = document.getElementById("gameOverScreen");
-const finalScore = document.getElementById("finalScore");
+const scoreElement = document.getElementById("score");
+const highScoreElement = document.getElementById("highScore");
+const message = document.getElementById("message");
 
-const restartButton = document.getElementById("restartButton");
-const playAgainButton = document.getElementById("playAgainButton");
-const difficultySelect = document.getElementById("difficulty");
-const pauseButton = document.getElementById("pauseButton");
-
-const startScreen = document.getElementById("startScreen");
-const gameScreen = document.getElementById("gameScreen");
-const startButton = document.getElementById("startButton");
-
-// High score
-let highScore = Number(localStorage.getItem("snakeHighScore")) || 0;
-
-const highScoreDisplay = document.createElement("p");
-highScoreDisplay.textContent = "High Score: " + highScore;
-scoreDisplay.after(highScoreDisplay);
-
-// Game settings
-const gridSize = 10;
-const columns = canvas.width / gridSize;
-const rows = canvas.height / gridSize;
+const tileSize = 20;
+const tileCount = canvas.width / tileSize;
 
 let snake;
-let dx;
-let dy;
-
-let foodX;
-let foodY;
-let foodPoints = 1;
-
-let powerUpX;
-let powerUpY;
-let speedBoostActive = false;
-
-let score = 0;
-let timer;
-let boostTimer;
-
-let normalSpeed;
-const boostedSpeed = 70;
-const boostDuration = 5000;
-
+let food;
+let direction;
+let nextDirection;
+let score;
+let gameRunning = false;
 let gameOver = false;
-let isPaused = false;
-let gameStarted = false;
+let timer;
 
-// Reset the game
+let highScore = Number(localStorage.getItem("snakeHighScore")) || 0;
+highScoreElement.textContent = highScore;
+
 function resetGame() {
-    clearInterval(timer);
-    clearTimeout(boostTimer);
-
-    normalSpeed = Number(difficultySelect.value);
-    speedBoostActive = false;
-
     snake = [
-        { x: 50, y: 50 },
-        { x: 40, y: 50 },
-        { x: 30, y: 50 }
+        { x: 10, y: 10 },
+        { x: 9, y: 10 },
+        { x: 8, y: 10 }
     ];
 
-    dx = gridSize;
-    dy = 0;
-
+    direction = { x: 1, y: 0 };
+    nextDirection = { x: 1, y: 0 };
     score = 0;
-    foodPoints = 1;
-    gameOver = false;
-    isPaused = false;
+    scoreElement.textContent = score;
 
-    scoreDisplay.textContent = "Score: 0";
-    highScoreDisplay.textContent = "High Score: " + highScore;
-
-    gameOverScreen.style.display = "none";
-    finalScore.textContent = "Your score: 0";
-    pauseButton.textContent = "Pause";
-    pauseButton.disabled = false;
-
-    placeFood();
-    placePowerUp();
+    createFood();
     drawGame();
-
-    timer = setInterval(moveSnake, normalSpeed);
 }
 
-// Place regular food
-function placeFood() {
+function createFood() {
     do {
-        foodX = Math.floor(Math.random() * columns) * gridSize;
-        foodY = Math.floor(Math.random() * rows) * gridSize;
+        food = {
+            x: Math.floor(Math.random() * tileCount),
+            y: Math.floor(Math.random() * tileCount)
+        };
     } while (
-        snake.some(function(segment) {
-            return segment.x === foodX && segment.y === foodY;
-        })
-    );
-
-    // 20% chance of golden food worth 5 points
-    foodPoints = Math.random() < 0.2 ? 5 : 1;
-}
-
-// Place the speed power-up
-function placePowerUp() {
-    do {
-        powerUpX = Math.floor(Math.random() * columns) * gridSize;
-        powerUpY = Math.floor(Math.random() * rows) * gridSize;
-    } while (
-        snake.some(function(segment) {
-            return segment.x === powerUpX && segment.y === powerUpY;
-        }) ||
-        (foodX === powerUpX && foodY === powerUpY)
+        snake.some(segment => segment.x === food.x && segment.y === food.y)
     );
 }
 
-// Activate temporary speed boost
-function activateSpeedBoost() {
-    clearTimeout(boostTimer);
-    clearInterval(timer);
+function drawGame() {
+    ctx.fillStyle = "#080d12";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    speedBoostActive = true;
-    timer = setInterval(moveSnake, boostedSpeed);
+    // Draw the food
+    ctx.fillStyle = "#ff4757";
+    ctx.beginPath();
+    ctx.arc(
+        food.x * tileSize + tileSize / 2,
+        food.y * tileSize + tileSize / 2,
+        tileSize / 2 - 2,
+        0,
+        Math.PI * 2
+    );
+    ctx.fill();
 
-    boostTimer = setTimeout(function() {
-        speedBoostActive = false;
-
-        clearInterval(timer);
-
-        if (!gameOver) {
-            timer = setInterval(
-                moveSnake,
-                isPaused ? normalSpeed : normalSpeed
-            );
-        }
-
-        drawGame();
-    }, boostDuration);
+    // Draw the snake
+    snake.forEach((segment, index) => {
+        ctx.fillStyle = index === 0 ? "#8affaa" : "#35e875";
+        ctx.fillRect(
+            segment.x * tileSize + 1,
+            segment.y * tileSize + 1,
+            tileSize - 2,
+            tileSize - 2
+        );
+    });
 }
 
-// Move the snake
-function moveSnake() {
-    if (gameOver || isPaused) return;
+function gameLoop() {
+    if (!gameRunning) return;
+
+    direction = nextDirection;
 
     const head = {
-        x: snake[0].x + dx,
-        y: snake[0].y + dy
+        x: snake[0].x + direction.x,
+        y: snake[0].y + direction.y
     };
 
-    // Wall collision
+    // Check wall collision
     if (
         head.x < 0 ||
+        head.x >= tileCount ||
         head.y < 0 ||
-        head.x >= canvas.width ||
-        head.y >= canvas.height
+        head.y >= tileCount
     ) {
         endGame();
         return;
     }
 
-    const ateFood =
-        head.x === foodX && head.y === foodY;
+    const eatingFood = head.x === food.x && head.y === food.y;
 
-    const atePowerUp =
-        head.x === powerUpX && head.y === powerUpY;
+    // Allow moving into the old tail position if the tail moves away
+    const bodyToCheck = eatingFood ? snake : snake.slice(0, -1);
 
-    // Body collision
-    const body = ateFood ? snake : snake.slice(0, -1);
-
-    const hitBody = body.some(function(segment) {
-        return segment.x === head.x && segment.y === head.y;
-    });
-
-    if (hitBody) {
+    if (
+        bodyToCheck.some(
+            segment => segment.x === head.x && segment.y === head.y
+        )
+    ) {
         endGame();
         return;
     }
 
     snake.unshift(head);
 
-    if (atePowerUp) {
-        placePowerUp();
-        activateSpeedBoost();
-    }
+    if (eatingFood) {
+        score += 10;
+        scoreElement.textContent = score;
 
-    if (ateFood) {
-        score += foodPoints;
-        scoreDisplay.textContent = "Score: " + score;
-
-        // Save a new high score
         if (score > highScore) {
             highScore = score;
+            highScoreElement.textContent = highScore;
             localStorage.setItem("snakeHighScore", highScore);
-            highScoreDisplay.textContent =
-                "High Score: " + highScore;
         }
 
-        placeFood();
+        createFood();
     } else {
         snake.pop();
     }
@@ -205,147 +131,83 @@ function moveSnake() {
     drawGame();
 }
 
-// Draw the game
-function drawGame() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw snake
-    snake.forEach(function(segment, index) {
-        ctx.fillStyle = index === 0 ? "#7CFC00" : "green";
-
-        ctx.fillRect(
-            segment.x,
-            segment.y,
-            gridSize,
-            gridSize
-        );
-
-        ctx.strokeStyle = "#222";
-        ctx.strokeRect(
-            segment.x,
-            segment.y,
-            gridSize,
-            gridSize
-        );
-    });
-
-    // Draw regular food
-    ctx.fillStyle = foodPoints === 5 ? "gold" : "red";
-    ctx.fillRect(foodX, foodY, gridSize, gridSize);
-
-    // Draw blue power-up while boost is inactive
-    if (!speedBoostActive) {
-        ctx.fillStyle = "deepskyblue";
-        ctx.fillRect(
-            powerUpX,
-            powerUpY,
-            gridSize,
-            gridSize
-        );
-    }
-}
-
-// Game Over
-function endGame() {
-    gameOver = true;
-
+function startGame() {
     clearInterval(timer);
-    clearTimeout(boostTimer);
+    resetGame();
 
-    speedBoostActive = false;
+    gameRunning = true;
+    gameOver = false;
+    message.textContent = "Good luck! 🐍";
 
-    pauseButton.disabled = true;
-    finalScore.textContent = "Your score: " + score;
-    gameOverScreen.style.display = "block";
+    timer = setInterval(gameLoop, 130);
 }
 
-// Keyboard controls
-document.addEventListener("keydown", function(event) {
+function endGame() {
+    gameRunning = false;
+    gameOver = true;
+    clearInterval(timer);
+    message.textContent = `Game Over! Your score: ${score}`;
+}
+
+function togglePause() {
+    if (gameOver || !snake) return;
+
+    if (gameRunning) {
+        gameRunning = false;
+        clearInterval(timer);
+        message.textContent = "Paused";
+    } else {
+        gameRunning = true;
+        message.textContent = "Keep going! 🐍";
+        timer = setInterval(gameLoop, 130);
+    }
+}
+
+function changeDirection(newDirection) {
     if (
-        ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]
-            .includes(event.key)
+        newDirection.x === -direction.x &&
+        newDirection.y === -direction.y
     ) {
+        return;
+    }
+
+    nextDirection = newDirection;
+}
+
+document.addEventListener("keydown", event => {
+    const key = event.key.toLowerCase();
+
+    const directions = {
+        arrowup: { x: 0, y: -1 },
+        w: { x: 0, y: -1 },
+        arrowdown: { x: 0, y: 1 },
+        s: { x: 0, y: 1 },
+        arrowleft: { x: -1, y: 0 },
+        a: { x: -1, y: 0 },
+        arrowright: { x: 1, y: 0 },
+        d: { x: 1, y: 0 }
+    };
+
+    if (directions[key]) {
         event.preventDefault();
-    }
-
-    if (!gameStarted || gameOver || isPaused) return;
-
-    if (event.key === "ArrowUp" && dy === 0) {
-        dx = 0;
-        dy = -gridSize;
-    } else if (event.key === "ArrowDown" && dy === 0) {
-        dx = 0;
-        dy = gridSize;
-    } else if (event.key === "ArrowLeft" && dx === 0) {
-        dx = -gridSize;
-        dy = 0;
-    } else if (event.key === "ArrowRight" && dx === 0) {
-        dx = gridSize;
-        dy = 0;
+        changeDirection(directions[key]);
     }
 });
 
-// Mobile controls
-document.getElementById("upButton").addEventListener("click", function() {
-    if (gameStarted && !gameOver && !isPaused && dy === 0) {
-        dx = 0;
-        dy = -gridSize;
-    }
+document.querySelectorAll("[data-dir]").forEach(button => {
+    button.addEventListener("click", () => {
+        const directions = {
+            up: { x: 0, y: -1 },
+            down: { x: 0, y: 1 },
+            left: { x: -1, y: 0 },
+            right: { x: 1, y: 0 }
+        };
+
+        changeDirection(directions[button.dataset.dir]);
+    });
 });
 
-document.getElementById("downButton").addEventListener("click", function() {
-    if (gameStarted && !gameOver && !isPaused && dy === 0) {
-        dx = 0;
-        dy = gridSize;
-    }
-});
+document.getElementById("startBtn").addEventListener("click", startGame);
+document.getElementById("pauseBtn").addEventListener("click", togglePause);
 
-document.getElementById("leftButton").addEventListener("click", function() {
-    if (gameStarted && !gameOver && !isPaused && dx === 0) {
-        dx = -gridSize;
-        dy = 0;
-    }
-});
-
-document.getElementById("rightButton").addEventListener("click", function() {
-    if (gameStarted && !gameOver && !isPaused && dx === 0) {
-        dx = gridSize;
-        dy = 0;
-    }
-});
-
-// Start menu
-startButton.addEventListener("click", function() {
-    gameStarted = true;
-    startScreen.style.display = "none";
-    gameScreen.style.display = "block";
-
-    resetGame();
-});
-
-// Restart button
-restartButton.addEventListener("click", function() {
-    if (gameStarted) {
-        resetGame();
-    }
-});
-
-// Play Again button
-playAgainButton.addEventListener("click", function() {
-    resetGame();
-});
-
-// Pause and Resume
-pauseButton.addEventListener("click", function() {
-    if (!gameStarted || gameOver) return;
-
-    isPaused = !isPaused;
-    pauseButton.textContent = isPaused ? "Resume" : "Pause";
-});
-
-// Change difficulty
-difficultySelect.addEventListener("change", function() {
-    if (gameStarted) {
-        resetGame();
-    }
-});
+resetGame();
