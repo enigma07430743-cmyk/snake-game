@@ -6,56 +6,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snake Game</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
 </head>
 <body>
+    <div class="game-container">
+        <h1>🐍 Snake Game</h1>
 
-    <!-- Start Menu -->
-    <div id="startScreen">
-        <h1>Snake Game 🐍</h1>
-        <p>Ready to play?</p>
+        <div class="score-board">
+            <span>Score: <span id="score">0</span></span>
+            <span>Best: <span id="highScore">0</span></span>
+        </div>
 
-        <label for="difficulty">Difficulty:</label>
-        <select id="difficulty">
-            <option value="200">Easy</option>
-            <option value="150" selected>Medium</option>
-            <option value="90">Hard</option>
-        </select>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
 
-        <br>
-        <button id="startButton">Play Game</button>
-    </div>
+        <p id="message">Press Start to play!</p>
 
-    <!-- Game Screen -->
-    <div id="gameScreen" style="display: none;">
-        <h1>Snake Game 🐍</h1>
-        <p>Use the arrow keys to move!</p>
+        <div class="buttons">
+            <button id="startBtn">Start Game</button>
+            <button id="pauseBtn">Pause</button>
+        </div>
 
-        <p id="score">Score: 0</p>
-
-        <canvas id="game" width="220" height="220"></canvas>
-
-        <!-- Mobile Controls -->
-        <div id="mobileControls">
-            <button id="upButton">⬆️</button>
-
+        <div class="controls">
+            <button data-dir="up">⬆️</button>
             <div>
-                <button id="leftButton">⬅️</button>
-                <button id="downButton">⬇️</button>
-                <button id="rightButton">➡️</button>
+                <button data-dir="left">⬅️</button>
+                <button data-dir="down">⬇️</button>
+                <button data-dir="right">➡️</button>
             </div>
         </div>
 
-        <button id="restartButton">Restart Game</button>
-        <button id="pauseButton">Pause</button>
-
-        <!-- Game Over Screen -->
-        <div id="gameOverScreen" style="display: none;">
-            <h2>Game Over!</h2>
-            <p id="finalScore">Your score: 0</p>
-            <button id="playAgainButton">Play Again</button>
-        </div>
+        <p class="help">Use arrow keys or WASD to move.</p>
     </div>
 
+    <script src="script.js"></script>
 </body>
 </html>
