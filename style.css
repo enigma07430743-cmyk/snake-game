@@ -1,90 +1,93 @@
-
- {
+{
     box-sizing: border-box;
-    font-family: Arial, sans-serif;
 }
 
 body {
     margin: 0;
     min-height: 100vh;
-    padding: 30px 10px;
-    background: #222;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #101820;
     color: white;
+    font-family: Arial, sans-serif;
+}
+
+.game-container {
+    width: min(95%, 460px);
+    padding: 20px;
     text-align: center;
+    background: #1b2838;
+    border: 2px solid #35e875;
+    border-radius: 18px;
+    box-shadow: 0 0 25px #35e87533;
 }
 
+h1 {
+    color: #35e875;
+    margin-top: 0;
+}
 
-canvas#game {
+.score-board {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#gameCanvas {
     display: block;
-    width: min(400px, 92vw);
+    width: 100%;
     height: auto;
-    aspect-ratio: 1 / 1;
-    margin: 15px auto;
-    background: #000;
-    border: 3px solid #fff;
+    background: #080d12;
+    border: 3px solid #35e875;
+    border-radius: 6px;
 }
 
-
-#gameOverScreen {
-    margin-top: 15px;
+#message {
+    min-height: 22px;
+    color: #ffd166;
+    font-weight: bold;
 }
 
-#gameOverScreen h2 {
-    color: red;
-}
-
-button,
-select {
-    padding: 10px 20px;
-    margin: 10px 5px;
-    background: #7CFC00;
-    color: black;
+button {
+    padding: 11px 17px;
+    margin: 4px;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
+    background: #35e875;
+    color: #101820;
+    font-weight: bold;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 15px;
 }
 
 button:hover {
-    background: green;
-    color: white;
+    background: #18c95b;
+    transform: scale(1.04);
 }
 
-/* Mobile controls */
-
-#mobileControls {
-    margin: 15px auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
+.controls {
+    margin-top: 12px;
 }
 
-#mobileControls div {
-    display: flex;
-    gap: 5px;
+.controls button {
+    min-width: 55px;
+    font-size: 20px;
 }
 
-#mobileControls button {
-    width: 55px;
-    height: 45px;
-    padding: 0;
-    margin: 0;
-    font-size: 22px;
-    line-height: 1;
-    background: #333;
-    color: white;
-    border: 2px solid #7CFC00;
-    border-radius: 8px;
-    cursor: pointer;
-    flex-shrink: 0;
+.help {
+    color: #b8c7d9;
+    font-size: 13px;
 }
 
-#mobileControls button:hover {
-    background: #7CFC00;
-    color: black;
-}
+@media (max-width: 420px) {
+    .game-container {
+        padding: 12px;
+    }
 
-#mobileControls button:active {
-    transform: scale(0.9);
+    button {
+        padding: 10px 13px;
+    }
 }
