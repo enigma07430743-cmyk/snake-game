@@ -1,0 +1,61 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+
+    <!-- Start Menu -->
+    <div id="startScreen">
+        <h1>Snake Game 🐍</h1>
+        <p>Ready to play?</p>
+
+        <label for="difficulty">Difficulty:</label>
+        <select id="difficulty">
+            <option value="200">Easy</option>
+            <option value="150" selected>Medium</option>
+            <option value="90">Hard</option>
+        </select>
+
+        <br>
+        <button id="startButton">Play Game</button>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" style="display: none;">
+        <h1>Snake Game 🐍</h1>
+        <p>Use the arrow keys to move!</p>
+
+        <p id="score">Score: 0</p>
+
+        <canvas id="game" width="220" height="220"></canvas>
+
+        <!-- Mobile Controls -->
+        <div id="mobileControls">
+            <button id="upButton">⬆️</button>
+
+            <div>
+                <button id="leftButton">⬅️</button>
+                <button id="downButton">⬇️</button>
+                <button id="rightButton">➡️</button>
+            </div>
+        </div>
+
+        <button id="restartButton">Restart Game</button>
+        <button id="pauseButton">Pause</button>
+
+        <!-- Game Over Screen -->
+        <div id="gameOverScreen" style="display: none;">
+            <h2>Game Over!</h2>
+            <p id="finalScore">Your score: 0</p>
+            <button id="playAgainButton">Play Again</button>
+        </div>
+    </div>
+
+</body>
+</html>
